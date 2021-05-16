@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang = "en-US">
+<html>
+<head>
+<title>Order</title>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
+
+</head>
+<body>
+	<style>
+		.newtr td{padding:10px 10px 10px 0px}
+		#gen_inv{display: none;}
+		.printdiv{display: none;}
+		#print_area tr td{padding: 5px;border: 1px solid #333}
+		#print_area tr th{padding: 5px;border: 1px solid #333}
+		#print_area tr{padding: 5px;border: 1px solid #333}
+	</style>
+<div class="col-md-9">
+<h1>Make Order</h1>
+<p>Please Fill All Details and Create Invoice</p>
+
+
+<form action  = "" method = "post" id = "frm_data">
+<table width="100%">
+<thead>
+ <th>Sl.</th>
+ <th>Name</th>
+ <th>Quantity</th>
+ <th>Unit Price(in $)</th>
+ <th>Tax</th>
+ <th>Amount</th>
+ <th><input type = "button" value = "+" id = "addnew" class="btn btn-info btn-xs" title = "Click to Add New Row"/></th>
+</thead>
+<tbody id = "tbl_body">
+ <tr class="newtr">
+ <td>1</td>
+ <td><input  type = "text" class="form-control" id="item1" onkeyup="create_total(1)" placeholder = "Name"/></td>
+ <td><input type = "text" class="form-control" id="qty1" onkeyup="create_total(1)" placeholder = "Quantity"/></td>
+ <td><input type = "text" class="form-control" id="up1" onkeyup="create_total(1)" placeholder = "Unit Price"/></td>
+ <td><select id="tax1" onchange="create_total(1)" class="form-control">
+ 		<option>Select Tax</option>
+ 		<option value="0">0%</option>
+ 		<option value="1">1%</option>
+ 		<option value="5">5%</option>
+ 		<option value="10">10%</option>
+ </select></td>
+ <td><input type = "text" class="form-control" readonly id="tot1" placeholder = "Total"/>
+ <td><input type = "hidden" class="form-control" readonly id="totnotax1" placeholder = "Total notax"/>
+ <td title = "This Row Can't be Deleted"></td>
+ </tr>
+</tbody>
+</table>
+<br>
+
+<!-- <input type = "button" class="btn btn-success pull-right" value = "Submit" id = "sub_button" title = "Save the Record"/> -->
+</form>
+</div>
+<div class="col-md-3">
+	<h2>Summary</h2>	
+	<hr>
+	Discount : <span class="pull-right">% <input id="perc" type="checkbox" onclick="discount()" placeholder="Percent %"></span>
+	<input type = "text" class="form-control"  onkeyup="discount()" id="discount" value="" placeholder = "Discount"/>
+	(by default discount in amount, if in percentage click checkbox)	
+	<hr>	
+	<p>Sub Total without Tax <span class="pull-right" id="subttwithouttax">0</span> $</p>
+	<p>Sub Total with Tax <span  class="pull-right" id="subttwithtax">0</span> $</p>
+	<hr>	
+	<h4>Total Amount<span class="pull-right" id="ttamount">0</span> $</h4>
+	<br>	
+	<button id="gen_inv" class="btn btn-success pull-right" onclick="getprintdata()">Generate Invoice</button>
+</div>
+
+
+<!-- ###################print data########################### -->
+<div class="printdiv">
+<div id="print_area">
+	<h1>Invoice</h1>
+	<table width="100%">
+	  <tr><td colspan="5"></td><td align="right">Jibin Kumar kv</td></tr>
+	  <tr><td colspan="5"></td><td align="right">9744854765</td></tr>
+	</table>
+	<br>	
+	<br>	
+	<table width="100%">
+	<thead style="margin-bottom: 10px;">	
+	  <tr>		
+		<th align="left">#</th>
+		<th align="left">Name</th>
+		<th align="left">Quantity</th>
+		<th align="left">Unit Price(in $)</th>
+		<th align="left">Tax</th>
+		<th align="right">Total ($)</th>
+	  </tr>
+	  </thead>
+	  <tbody id="appdata"></tbody>
+	</table>	
+
+	<br>	
+	<hr>		
+
+	<table width="300px" align="right">
+	  <tr><td colspan="5"></td><td align="left">Sub Total without Tax</td><td align="right"><span id="print_subttwithouttax">0</span> $</td></tr>
+	  <tr><td colspan="5"></td><td align="left">Sub Total with Tax</td><td align="right"><span id="print_subttwithtax">0</span> $</td></tr>
+	  <tr><td colspan="5"></td><td align="left">Discount</td><td align="right"><span id="print_discount">0</span> $</td></tr>
+	  <tr><td colspan="5"></td><td align="left">Total Amount</td><td align="right"><span id="print_ttamount">0</span> $</td></tr>
+	</table>
+
+</div>
+</div>
+<!-- ###################print data########################### -->
+
+
+<script>
+$(document).ready(function(){
+  $('#addnew').click(function(){
+   addnewrow();
+  });
+ $('body').delegate('#del_row', 'click', function(){
+   $(this).parent().parent().remove();
+   summary();
+  });
+ });
+ function addnewrow(){
+  var n = ($('#tbl_body tr').length - 0) + 1;
+  var row =  '<tr class="newtr">' +
+     '<td>' + n + '</td>' +
+     '<td><input type = "text" class="form-control" id="item'+n+'" onkeyup="create_total('+n+')" placeholder = "Name"/></td>' +
+     '<td><input type = "text" class="form-control" id="qty'+n+'" onkeyup="create_total('+n+')" placeholder = "Quantity"/></td>' +
+     '<td><input type = "text" class="form-control" id="up'+n+'" onkeyup="create_total('+n+')" placeholder = "Unit Price"/></td>' +
+     '<td><select id="tax'+n+'" onchange="create_total('+n+')" class="form-control"><option>Select Tax</option><option value="0">0%</option><option value="1">1%</option> <option value="5">5%</option> <option value="10">10%</option></select></td>' +
+     '<td><input type = "text" class="form-control" readonly id="tot'+n+'" placeholder = "Total"/></td>' +
+     '<td><input type = "hidden" class="form-control" readonly id="totnotax'+n+'" placeholder = "Total notax"/></td>' +
+     '<td><input type = "button" class="btn btn-danger btn-xs" value = "-" id = "del_row" onclick="summary()" title = "Click to Delete this Row"></td>' +
+     '</tr>';
+  $('#tbl_body').append(row);
+ }
+
+</script>
+
+
+
+<script>
+	function create_total(id)
+	{
+		// get all filed and calc sum
+		var this_item=$('#item'+id).val();
+		var this_qty=$('#qty'+id).val();
+		var this_up=$('#up'+id).val();
+		var this_tax=$('#tax'+id).val();
+		$('#error').hide();
+		$('#gen_inv').hide();
+		// check data
+		var err=0;
+		var erromsg='';
+		if(this_item.length < 1){ err=1;  }
+		if(!$.isNumeric(this_qty) || this_qty < 1){ err=1;  }
+		if(!$.isNumeric(this_up) || this_up  < 0){ err=1;  }
+		if(!$.isNumeric(this_tax) || this_tax < 0){ err=1;  }
+		if(err===0)
+		{
+			taxedval=0;
+			if(this_tax > 0){var taxedval=this_up*this_tax/100; }
+
+			var total_withtax=(parseFloat(this_up) + parseFloat(taxedval))*this_qty;
+			var total_without_tax=(this_up)*this_qty;
+
+			$('#tot'+id).val(total_withtax);
+			$('#totnotax'+id).val(total_without_tax);
+
+			summary();
+		}
+		else
+		{
+			$('#tot'+id).val('');
+			$('#totnotax'+id).val('');
+		}
+
+	}
+
+
+
+
+
+
+	function summary()
+	{
+
+  		var summary_total=0;
+  		var summary_total_notax=0;
+  		var grand=0;
+  		var totallength = $('#tbl_body tr').length;
+	    for (i =1 ; i <= totallength; i++) 
+	    {
+	      // get all totals and totalwithout tax
+	      var eachtotal=$('#tot'+i).val();
+	      var eachtotal_notax=$('#totnotax'+i).val();
+		      if(eachtotal !='')
+		      {
+		      summary_total = parseFloat(summary_total) + parseFloat(eachtotal);
+		      summary_total_notax = parseFloat(summary_total_notax) + parseFloat(eachtotal_notax);
+		  	  }
+	    }
+
+	    $('#subttwithouttax').html(summary_total_notax);
+	    $('#subttwithtax').html(summary_total);
+
+	    $('#ttamount').html(summary_total);
+
+	    discount();
+	    $('#gen_inv').show();
+
+	}
+
+
+	function discount()
+	{
+		var total =  parseFloat($('#subttwithtax').html());
+		var discount = parseFloat($('#discount').val());
+		err=0;
+		if(!$.isNumeric(discount) || discount < 1){ err=1;  }
+
+		if(err===0)
+		{
+			// check amount or percentage
+			if($('#perc').prop('checked'))
+			{
+				// calc with percentage
+				discount = total*discount/100;
+			}
+			
+
+			if(discount > total)
+			{
+				discount=total;
+				$('#discount').val(total);
+			}
+
+			total=parseFloat(total) - parseFloat(discount);
+			$('#ttamount').html(total);
+		}
+	}
+
+
+
+
+
+
+  function getprintdata()
+  {
+	
+  		var appdata="";
+  		var totallength = $('#tbl_body tr').length;
+	    for (i =1 ; i <= totallength; i++) 
+	    {
+	      var eachitem=$('#item'+i).val();
+	      var eachqty=$('#qty'+i).val();
+	      var eachup=$('#up'+i).val();
+	      var eachtax=$('#tax'+i).val();
+	      var eachtotal=$('#tot'+i).val();
+	      appdata=appdata+'<tr><td>'+i+'</td><td>'+eachitem+'</td><td>'+eachqty+'</td><td>'+eachup+'</td><td>'+eachtax+'</td><td align="right">'+eachtotal+'</td></tr>';   
+	    }
+
+
+	    $('#appdata').html(appdata);
+
+	    var subttwithouttax=$('#subttwithouttax').html();
+	    var subttwithtax=$('#subttwithtax').html();
+	    var ttamount=$('#ttamount').html();
+	    var discount = subttwithtax - ttamount;
+
+
+	    $('#print_subttwithouttax').html(subttwithouttax);
+	    $('#print_subttwithtax').html(subttwithtax);
+	    $('#print_discount').html(discount);
+	    $('#print_ttamount').html(ttamount);
+
+		printDiv();
+  }
+
+
+   function printDiv() 
+   {
+   var divToPrint=document.getElementById('print_area');
+   var newWin=window.open('','Print-Window');
+   newWin.document.open();
+   newWin.document.write('<html><body onload="window.print()">'+divToPrint.innerHTML+'</body></html>');
+   newWin.document.close();
+   setTimeout(function(){newWin.close();},10);
+   }
+</script>
+
+
+
+</body>
+</html>
